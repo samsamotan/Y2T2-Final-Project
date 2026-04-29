@@ -95,9 +95,15 @@ Predicting Discount Depth and Value Retention of PC Games on Steam.
   - sale start date, end date, depth, sale type (if available)
 - [ ] Store to `data/raw/itad/`
 
-### Player counts
-- [ ] Pull daily concurrent player counts per game (Steam API / SteamCharts)
-- [ ] Store time series to `data/raw/playercounts/`
+### Player counts — historical (SteamCharts)
+- [ ] Run Stage 6 of `01_data_collection.ipynb` to scrape `steamcharts.com/app/{appid}/chart-data.json`
+- [ ] Verify coverage: how many games have ≥ 100 history points? How far back does the median game go?
+- [ ] Spot-check a few high-profile titles (CS2, Dota 2, TF2) against SteamCharts UI to confirm parser matches the chart
+- [ ] Document granularity (~weekly per game) as a methodology limitation in the report
+
+### Player counts — forward-looking (Steam Web API)
+- [ ] Schedule Stage 7 to run daily via Windows Task Scheduler / cron
+- [ ] After ~2 weeks of daily snapshots, layer them onto SteamCharts data for fresh post-Apr-2026 sales
 
 ### Review velocity
 - [ ] Compute reviews-per-day series from review timestamps already collected
@@ -106,7 +112,8 @@ Predicting Discount Depth and Value Retention of PC Games on Steam.
 
 ## Phase 5 — Longitudinal Analysis & Modeling (Part 2)
 
-- [ ] For each sale event, compute:
+- [ ] **Derive sale events from `price_history`**: group consecutive rows where `cut > 0` per (appid, shop_id) into discrete (start, end, max_depth) intervals
+- [ ] For each sale event, compute (using `steamcharts_history`):
   - 7-day post-sale player-count avg vs. 14-day pre-sale baseline
   - 7-day post-sale review velocity vs. baseline
   - `uplift_pct` = (post − pre) / pre
@@ -149,5 +156,6 @@ Predicting Discount Depth and Value Retention of PC Games on Steam.
 - [ ] Confirm Steam API rate limits in practice — may need to spread collection over days
 - [ ] Decide sampling strategy for the 5,000 games (random vs. stratified by year/genre/popularity)
 - [ ] ITAD coverage may be patchy for very obscure indie titles — check before relying
-- [ ] Player-count granularity from SteamCharts is daily; sufficient for 7-day windows but not finer
+- [ ] SteamCharts CCU is ~weekly per game (not daily as initially assumed) — fine for 7-day sale windows, but cannot resolve sub-week effects. Cite as a methodology limitation.
+- [ ] SteamCharts scraping is not officially sanctioned — be polite (2s/req, descriptive UA) and cache; if blocked, fall back to live-only Stage 7 collection.
 - [ ] PHP pricing assumes Steam regional pricing is stable — verify no mid-collection currency shifts
