@@ -247,3 +247,23 @@ def pending_appids(conn: sqlite3.Connection, flag: str, limit: int | None = None
     if limit is not None:
         sql += f" LIMIT {int(limit)}"
     return [r[0] for r in conn.execute(sql)]
+
+
+def pending_appids_with_game(
+    conn: sqlite3.Connection,
+    flag: str,
+    limit: int | None = None,
+) -> list[int]:
+    """Like `pending_appids`, but restricted to appids that have a row in
+    `games`. Use this for any stage whose target table has FK → games (reviews,
+    steamspy, itad_mapping, steamcharts_history, etc.) — otherwise non-game
+    types (DLC, demos) and delisted appids will trip the FK constraint."""
+    sql = f"""
+        SELECT a.appid FROM app_list a
+        INNER JOIN games g ON g.appid = a.appid
+        WHERE a.{flag} = 0
+        ORDER BY a.appid
+    """
+    if limit is not None:
+        sql += f" LIMIT {int(limit)}"
+    return [r[0] for r in conn.execute(sql)]

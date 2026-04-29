@@ -85,7 +85,14 @@ def collect_history(conn: sqlite3.Connection, appids: list[int]) -> dict[str, in
             stats["missing"] += 1
             continue
 
-        inserted = store_history(conn, appid, points)
+        try:
+            inserted = store_history(conn, appid, points)
+        except Exception as e:
+            conn.rollback()
+            mark_progress(conn, appid, "has_steamcharts", value=0, error=f"store: {e}"[:200])
+            stats["error"] += 1
+            continue
+
         stats["rows_inserted"] += inserted
         mark_progress(conn, appid, "has_steamcharts", value=1)
         stats["ok"] += 1

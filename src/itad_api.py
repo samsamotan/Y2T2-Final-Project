@@ -65,7 +65,14 @@ def collect_itad_mappings(
             stats["missing"] += 1
             continue
 
-        store_itad_mapping(conn, appid, game)
+        try:
+            store_itad_mapping(conn, appid, game)
+        except Exception as e:
+            conn.rollback()
+            mark_progress(conn, appid, "has_itad_id", value=0, error=f"store: {e}"[:200])
+            stats["error"] += 1
+            continue
+
         mark_progress(conn, appid, "has_itad_id", value=1)
         stats["ok"] += 1
     return stats
@@ -171,7 +178,14 @@ def collect_price_history(
             stats["empty"] += 1
             continue
 
-        inserted = store_price_history(conn, appid, history)
+        try:
+            inserted = store_price_history(conn, appid, history)
+        except Exception as e:
+            conn.rollback()
+            mark_progress(conn, appid, "has_price_history", value=0, error=f"store: {e}"[:200])
+            stats["error"] += 1
+            continue
+
         stats["rows_inserted"] += inserted
         mark_progress(conn, appid, "has_price_history", value=1)
         stats["ok"] += 1

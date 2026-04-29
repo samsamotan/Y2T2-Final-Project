@@ -274,10 +274,16 @@ def collect_reviews(
             stats["missing"] += 1
             continue
 
-        store_review_summary(conn, appid, summary)
-        if fetch_individual:
-            reviews = fetch_review_timestamps(appid, max_pages=max_pages)
-            store_review_timestamps(conn, appid, reviews)
+        try:
+            store_review_summary(conn, appid, summary)
+            if fetch_individual:
+                reviews = fetch_review_timestamps(appid, max_pages=max_pages)
+                store_review_timestamps(conn, appid, reviews)
+        except Exception as e:
+            conn.rollback()
+            mark_progress(conn, appid, "has_reviews", value=0, error=f"store: {e}"[:200])
+            stats["error"] += 1
+            continue
 
         mark_progress(conn, appid, "has_reviews", value=1)
         stats["ok"] += 1

@@ -126,7 +126,14 @@ def collect_steamspy(conn: sqlite3.Connection, appids: list[int]) -> dict[str, i
             stats["missing"] += 1
             continue
 
-        store_appdetails(conn, appid, data)
+        try:
+            store_appdetails(conn, appid, data)
+        except Exception as e:
+            conn.rollback()
+            mark_progress(conn, appid, "has_steamspy", value=0, error=f"store: {e}"[:200])
+            stats["error"] += 1
+            continue
+
         mark_progress(conn, appid, "has_steamspy", value=1)
         stats["ok"] += 1
     return stats
