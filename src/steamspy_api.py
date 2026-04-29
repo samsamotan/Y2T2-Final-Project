@@ -9,6 +9,8 @@ from __future__ import annotations
 import sqlite3
 from typing import Any
 
+from tqdm.auto import tqdm
+
 from .db import mark_progress, utcnow_iso
 from .utils import Throttle, get_with_retry
 
@@ -111,7 +113,7 @@ def store_appdetails(conn: sqlite3.Connection, appid: int, data: dict) -> None:
 
 def collect_steamspy(conn: sqlite3.Connection, appids: list[int]) -> dict[str, int]:
     stats = {"ok": 0, "missing": 0, "error": 0}
-    for appid in appids:
+    for appid in tqdm(appids, desc="SteamSpy", unit="game"):
         try:
             data = fetch_appdetails(appid)
         except Exception as e:

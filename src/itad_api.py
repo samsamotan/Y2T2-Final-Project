@@ -8,6 +8,8 @@ from __future__ import annotations
 
 import sqlite3
 
+from tqdm.auto import tqdm
+
 from .db import mark_progress, utcnow_iso
 from .utils import Throttle, get_with_retry
 
@@ -50,7 +52,7 @@ def collect_itad_mappings(
     appids: list[int],
 ) -> dict[str, int]:
     stats = {"ok": 0, "missing": 0, "error": 0}
-    for appid in appids:
+    for appid in tqdm(appids, desc="ITAD lookup", unit="game"):
         try:
             game = lookup_appid(api_key, appid)
         except Exception as e:
@@ -156,7 +158,7 @@ def collect_price_history(
     ).fetchall()
 
     stats = {"ok": 0, "empty": 0, "error": 0, "rows_inserted": 0}
-    for appid, itad_id in rows:
+    for appid, itad_id in tqdm(rows, desc="ITAD price history", unit="game"):
         try:
             history = fetch_price_history(api_key, itad_id, shops=shops, country=country)
         except Exception as e:

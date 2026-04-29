@@ -9,6 +9,8 @@ import json
 import sqlite3
 from typing import Any
 
+from tqdm.auto import tqdm
+
 from .db import mark_progress, utcnow_iso
 from .utils import Throttle, get_with_retry
 
@@ -132,7 +134,7 @@ def collect_app_details(
     """Fetch + store details for each appid; updates app_list.has_details.
     Returns a tally dict."""
     stats = {"ok": 0, "missing": 0, "skipped": 0, "error": 0}
-    for appid in appids:
+    for appid in tqdm(appids, desc="Storefront details", unit="game"):
         try:
             data = fetch_app_details(appid, cc=cc)
         except Exception as e:
@@ -259,7 +261,7 @@ def collect_reviews(
     max_pages: int = 5,
 ) -> dict[str, int]:
     stats = {"ok": 0, "missing": 0, "error": 0}
-    for appid in appids:
+    for appid in tqdm(appids, desc="Reviews", unit="game"):
         try:
             summary = fetch_review_summary(appid)
         except Exception as e:
@@ -306,7 +308,7 @@ def store_player_count(conn: sqlite3.Connection, appid: int, count: int) -> None
 
 def collect_player_counts(conn: sqlite3.Connection, appids: list[int]) -> dict[str, int]:
     stats = {"ok": 0, "missing": 0}
-    for appid in appids:
+    for appid in tqdm(appids, desc="Live CCU", unit="game"):
         count = fetch_current_players(appid)
         if count is None:
             stats["missing"] += 1

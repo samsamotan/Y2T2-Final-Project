@@ -13,6 +13,8 @@ from __future__ import annotations
 import sqlite3
 from datetime import datetime, timezone
 
+from tqdm.auto import tqdm
+
 from .db import mark_progress
 from .utils import Throttle, get_with_retry
 
@@ -70,7 +72,7 @@ def store_history(
 def collect_history(conn: sqlite3.Connection, appids: list[int]) -> dict[str, int]:
     """Fetch + store historical CCU for each appid; updates has_steamcharts."""
     stats = {"ok": 0, "missing": 0, "error": 0, "rows_inserted": 0}
-    for appid in appids:
+    for appid in tqdm(appids, desc="SteamCharts", unit="game"):
         try:
             points = fetch_history(appid)
         except Exception as e:
