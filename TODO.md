@@ -46,6 +46,7 @@ Predicting Discount Depth and Value Retention of PC Games on Steam.
 
 ## Phase 2 — EDA & Feature Engineering (Part 1)
 
+- [x] Create comprehensive EDA notebook (`notebooks/03_eda.ipynb`) with all required analyses
 - [ ] Distribution plots: launch price, current price, discount %, age, review score
 - [ ] Correlation heatmap of numeric features
 - [ ] Genre × discount depth boxplots
