@@ -9,13 +9,33 @@ import requests
 from dotenv import load_dotenv
 
 
+def _load_project_env() -> Path | None:
+    """Load the first `.env` found in common project/notebook locations."""
+    candidates = [
+        Path.cwd() / ".env",
+        Path.cwd().parent / ".env",
+        Path(__file__).resolve().parent.parent / ".env",
+    ]
+
+    seen: set[Path] = set()
+    for candidate in candidates:
+        resolved = candidate.resolve()
+        if resolved in seen:
+            continue
+        seen.add(resolved)
+        if resolved.exists():
+            load_dotenv(resolved, override=False)
+            return resolved
+    return None
+
+
 def load_keys() -> dict[str, str | None]:
     """Load .env from project root and return the keys we use."""
-    project_root = Path(__file__).resolve().parent.parent
-    load_dotenv(project_root / ".env")
+    env_path = _load_project_env()
     return {
         "steam": os.getenv("STEAM_API_KEY"),
         "itad": os.getenv("ISTHEREANYDEAL_API"),
+        "env_path": str(env_path) if env_path else None,
     }
 
 
