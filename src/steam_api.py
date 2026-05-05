@@ -289,36 +289,3 @@ def collect_reviews(
         stats["ok"] += 1
     return stats
 
-
-# --------------------------------------------------------------------------
-# Concurrent player count (single-shot — collect repeatedly to build a series)
-# --------------------------------------------------------------------------
-def fetch_current_players(appid: int) -> int | None:
-    url = f"{WEB_API}/ISteamUserStats/GetNumberOfCurrentPlayers/v1/"
-    r = get_with_retry(url, params={"appid": appid}, throttle=_webapi_throttle)
-    if r is None:
-        return None
-    resp = (r.json() or {}).get("response") or {}
-    if resp.get("result") != 1:
-        return None
-    return resp.get("player_count")
-
-
-def store_player_count(conn: sqlite3.Connection, appid: int, count: int) -> None:
-    conn.execute(
-        "INSERT OR REPLACE INTO player_counts (appid, fetched_at, player_count) VALUES (?, ?, ?)",
-        (appid, utcnow_iso(), count),
-    )
-    conn.commit()
-
-
-def collect_player_counts(conn: sqlite3.Connection, appids: list[int]) -> dict[str, int]:
-    stats = {"ok": 0, "missing": 0}
-    for appid in tqdm(appids, desc="Live CCU", unit="game"):
-        count = fetch_current_players(appid)
-        if count is None:
-            stats["missing"] += 1
-            continue
-        store_player_count(conn, appid, count)
-        stats["ok"] += 1
-    return stats

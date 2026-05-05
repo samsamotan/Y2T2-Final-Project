@@ -156,17 +156,6 @@ CREATE TABLE IF NOT EXISTS price_history (
 CREATE INDEX IF NOT EXISTS ix_price_history_appid     ON price_history(appid);
 CREATE INDEX IF NOT EXISTS ix_price_history_timestamp ON price_history(timestamp);
 
--- Concurrent player snapshots from Steam Web API. Single-shot endpoint, so
--- to build a time series the collector must run repeatedly (e.g. daily cron).
-CREATE TABLE IF NOT EXISTS player_counts (
-    appid         INTEGER NOT NULL,
-    fetched_at    TEXT NOT NULL,
-    player_count  INTEGER,
-    PRIMARY KEY (appid, fetched_at),
-    FOREIGN KEY (appid) REFERENCES games(appid) ON DELETE CASCADE
-);
-CREATE INDEX IF NOT EXISTS ix_player_counts_appid ON player_counts(appid);
-
 -- Historical CCU scraped from steamcharts.com/app/{appid}/chart-data.json.
 -- One row per timestamped data point (typically hourly or every few hours,
 -- going back ~4 years). This is the primary input for sale-uplift analysis.
